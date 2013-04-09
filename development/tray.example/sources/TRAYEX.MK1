@@ -1,0 +1,31 @@
+!define BLANK ""
+e:\wcos2\src\systray2\trayapi\trayex.obj : e:\wcos2\src\systray2\trayapi\tra&
+yex.c .AUTODEPEND
+ @e:
+ cd e:\wcos2\src\systray2\trayapi
+ *wcc386 trayex.c -i=C:\WATCOM\h;C:\WATCOM\h\os2 -w4 -e25 -zq -otexan -d2 -m&
+f -5r -bt=os2
+
+e:\wcos2\src\systray2\trayapi\trayex.res : e:\wcos2\src\systray2\trayapi\tra&
+yex.rc .AUTODEPEND
+ @e:
+ cd e:\wcos2\src\systray2\trayapi
+ rc -i $[: -i C:\WATCOM\h -i C:\WATCOM\h\os2 -r trayex.rc trayex.res
+
+e:\wcos2\src\systray2\trayapi\trayex.exe : e:\wcos2\src\systray2\trayapi\tra&
+yex.obj e:\wcos2\src\systray2\trayapi\trayex.res .AUTODEPEND
+ @e:
+ cd e:\wcos2\src\systray2\trayapi
+ @%write trayex.lk1 NAME trayex
+ @%append trayex.lk1 FIL trayex.obj
+ @%append trayex.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b trayex.imp 
+ @%append trayex.lk1 LIBR trayex.imp
+!endif
+ *wlink SYS os2v2 pm op m d all op st=32768 op maxe=25 op q op symf @trayex.&
+lk1
+!ifneq BLANK "trayex.res"
+ rc -i $[: -i C:\WATCOM\h -i C:\WATCOM\h\os2 trayex.res trayex.exe
+!endif
+

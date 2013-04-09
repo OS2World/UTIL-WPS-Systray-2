@@ -1,0 +1,139 @@
+____________________________________________________________
+
+ Systray/2                          Revison 0.1 (20/07/2000)
+ Plugin making reference.           		english ver.
+____________________________________________________________
+                                   Team OS/2 Russian project
+
+
+ 1. Introduction
+
+ Warning! This document describes preliminary version of the
+ plugin API. Specifications may change in the future versions.
+
+
+
+ 2. Examples syntaxis
+
+ This document uses C syntaxis for structure and code examples.
+
+
+
+ 3. Plugins format description
+
+ 3.1 Introduction
+
+ External plugins must be created as dynamic libraries (DLL) an
+ will be loaded by SysTray program. Since there may be multiple
+ SysTray programs running at one moment with different
+ configurations, developer must create plugins aware of this
+ feature.
+
+
+ 3.2 Initialization
+
+ Plugin is initialized during loading with exported function
+ named "RegisterPluginProc". Next parameters will be passed
+ to the function:
+
+ BOOL EXPENTRY RegisterPluginProc (
+
+ HMODULE hSelf, // Loaded plugin descriptor
+ HAB     hab,   // HAB
+ PWCLASS pwc,   // window class list (see below)
+ PUSHORT pus    // maximal count of classes that can be loaded
+ );
+
+ In this function you must register window classes and fill in
+ pwc structure along with filling pus variable with number of classes
+ available.
+
+
+ 3.3. PWCLASS class list structure
+
+ typedef struct _WCLASS {
+ CHAR    szName[250]; // Class name
+ ULONG   ulCfgSize;   // Class configuration size
+                      //(can change at run time)
+ ULONG   ulSafeAlloc; // Size of memory allocated for class configuration
+ BYTE    bInitalUnitWidthPercent;
+                      // Starting window width (in percents)
+ } WCLASS;
+
+ typedef WCLASS *PWCLASS;
+
+
+ 3.4. Window class initialization example
+
+ strcpy(pwc->szName,szClassName);
+ pwc->ulCfgSize = sizeof(UNIT);
+ pwc->ulSafeAlloc = sizeof(UNIT);
+ pwc->bInitalUnitWidthPercent = 15;
+ WinRegisterClass(hab,(PSZ)szClassName,
+                        (PFNWP)classwndproc,CS_SIZEREDRAW,8L);
+
+ *pus = 1;
+
+
+ 3.5. Units specification
+
+ Units are base elements of Systray panel. They may contain any
+ information according to window class. Each unit has its own
+ configuration. There is minimal standart configuration defined
+ in UNIT structure:
+
+ typedef struct _UNIT {
+ ULONG   cbFix;     // Full Structure size
+ CHAR    szClass[MAX_CLASS]; // class name
+ CHAR    szBubble[MAX_CLASS]; // help text
+ HWND    hwnd; // window descriptor
+ SHORT   sFlags; // reserved
+ ULONG   ulRefresh; // reserved for programmer use
+ SHORT   sBottom,sLeft,sHeight,sWidth; // used inside Systray
+ ULONG   ulReserved[4]; // reserved, used inside Systray
+ PFNWP   pfnOld; // reserved
+ } UNIT;
+ typedef UNIT *PUNIT;
+
+ Structure pointer must be tranfered during unit window creation:
+
+ case WM_CREATE:
+
+ punit = (PUNIT) mp1;
+ WinSetWindowULong(hwnd, 0L, (ULONG)punit);
+ break;
+
+ When window is about to be destroyed, memory must be freed:
+
+ case WM_DESTROY:
+
+ DosFree((PVOID)punit);
+ break;
+
+ Unit window class can use additional memory by setting size
+ into the according WCLASS variable. Starting size (minimal)
+ must be specified too. cbFix field of UNIT structure can
+ be changed at run time and must always contain length
+ of the memory used by the unit, because it is used during
+ configuration saving.
+
+
+ 3.6. Unit configuration
+
+ Unit configuration procedure is called when user selects
+ "Configure" in the "Units..." menu. Then unit receives
+ WM_COMMAND message. mp1 contains 100, and mp2 window
+ descriptor (HWND), used to specify owner parameter
+ of the WinDlgBox function. If unit does not have
+ configuration dialog, this message can be ignored.
+
+
+
+ 4. Contact
+
+ Main developer: 	  Dmitry Zacharov, madint@os2.ru
+ WWW page of the project: http://os2.ru/projects/systray
+
+____________________________________________________________
+Systray/2 	Copyright (á) 1999-2000,   Team OS/2 Russian
+Translated from Russian by Vit Timchishin (tvv@os2.ru)

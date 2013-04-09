@@ -1,0 +1,125 @@
+____________________________________________________________
+
+ Systray/2                  Revison 0.1 (21/07/2000)
+ TRAY API reference.
+____________________________________________________________
+                                   Team OS/2 Russian project
+
+ Warning! This document describes preliminary version of the
+ Tray API. Specifications may change in the future versions.
+
+ Contents
+
+ 1. Tray existence check
+ 2. Tray icon creation and manipulation
+ 3. Program callbacks from tray
+ 4. Contacts
+
+ 1. Tray existence check
+
+ To initialize TRAY API uses DDE:
+
+#define WM_TRAYADDME WM_USER+1
+#define WM_TRAYDELME WM_USER+2
+#define WM_TRAYICON  WM_USER+3
+
+HWND    hwndTrayServer = NULLHANDLE;
+
+#define SZAPP           "SystrayServer"
+#define SZTOPIC     "TRAY"
+
+BOOL    InitializeTrayApi(HWND hwnd)
+{
+WinDdeInitiate(hwnd,SZAPP,SZTOPIC,NULL);
+
+return TRUE;
+}
+
+BOOL    AnswerTrayApiDdeAck(MPARAM mp1)
+{
+hwndTrayServer = (HWND)mp1;
+
+return TRUE;
+}
+
+BOOL    AddTrayIcon(HWND hwnd,HPOINTER hptr)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYADDME,(MPARAM)hwnd,(MPARAM)hptr);
+
+return TRUE;
+}
+
+BOOL    ChangeTrayIcon(HWND hwnd,HPOINTER hptr)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYICON,(MPARAM)hwnd,(MPARAM)hptr);
+
+return TRUE;
+}
+
+BOOL    DeleteTrayIcon(HWND hwnd)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYDELME,(MPARAM)hwnd,(MPARAM)0L);
+
+return TRUE;
+}
+
+ after that TRAY API server send acknovledgment to the window
+ that initiates DDE:
+
+ case WM_DDE_INITIATEACK:
+ /* aswer dde server */
+ AnswerTrayApiDdeAck(mp1);
+ trayApiInstalled = TRUE;
+ break;
+
+
+ 2. Tray icon creation and manipulation
+
+ After successful initialization, you can create an icon at the tray.
+ HWND parameter must point to client window with frame window as parent.
+ So, frame window icon will be used.
+
+ AddTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT),NULLHANDLE);
+
+ To change icon (if owner changed frame window icon) other call must be
+ used:
+
+ ChangeTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT),NULLHANDLE);
+
+ You MUST destroy your icon before exit, otherwize it will still exist
+ in the hanged state!!!
+
+ DeleteTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT));
+
+ 3. Program callbacks from tray
+
+ Along with other, program will receive mouse messages (from tray icon)
+ to control program from tray. For example, when user presses right
+ mouse button above tray icon, one may show popup menu with options
+ choice:
+
+ case WM_BUTTON2CLICK | 0x2000: // 0x2000 means tray message
+ WinQueryPointerPos (HWND_DESKTOP, &ptl);
+ WinPopupMenu (.....);
+
+ return NULL;
+
+
+
+ 4. Contact
+
+ Main developer: 	  Dmitry Zakharov, madint@os2.ru
+ WWW page of the project: http://os2.ru/projects/systray
+
+
+____________________________________________________________
+Systray/2 	Copyright (á) 1999-2000,   Team OS/2 Russian
+Translated from Russian by Vit Timchishin (tvv@os2.ru)
+
+

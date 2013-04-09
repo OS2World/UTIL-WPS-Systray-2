@@ -1,0 +1,134 @@
+____________________________________________________________
+
+ Systray/2  			    Revison 0.1 (21/07/2000)
+ TRAY API reference.      
+____________________________________________________________
+                                   Team OS/2 Russian project
+
+
+ Внимание! В  данном  документе  описывается предварительная
+ версия интерфейса для создания приложений для System  TRAY.
+ В окончательной версии возможно ее изменение.
+
+
+ Содержание
+
+ 1. Проверка наличия интерфейса Tray в системе
+ 2. Создание иконки программы на трэе и управление ей
+ 3. Управление программой через TRAY API.
+ 4. Контакт
+
+
+
+ 1. Проверка наличия интерфейса TRAY в системе.
+
+ Для инициализации TRAY API использует DDE:
+
+#define WM_TRAYADDME WM_USER+1
+#define WM_TRAYDELME WM_USER+2
+#define WM_TRAYICON  WM_USER+3
+
+HWND	hwndTrayServer = NULLHANDLE;
+
+#define SZAPP	        "SystrayServer"
+#define SZTOPIC		"TRAY"
+
+BOOL	InitializeTrayApi(HWND hwnd)
+{
+WinDdeInitiate(hwnd,SZAPP,SZTOPIC,NULL);
+
+return TRUE;
+}
+
+BOOL    AnswerTrayApiDdeAck(MPARAM mp1)
+{
+hwndTrayServer = (HWND)mp1;
+
+return TRUE;
+}
+
+BOOL	AddTrayIcon(HWND hwnd,HPOINTER hptr)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYADDME,(MPARAM)hwnd,(MPARAM)hptr);
+
+return TRUE;
+}
+
+BOOL	ChangeTrayIcon(HWND hwnd,HPOINTER hptr)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYICON,(MPARAM)hwnd,(MPARAM)hptr);
+
+return TRUE;
+}
+
+BOOL	DeleteTrayIcon(HWND hwnd)
+{
+if(!hwndTrayServer) return FALSE; // api not initialized
+
+WinPostMsg(hwndTrayServer,WM_TRAYDELME,(MPARAM)hwnd,(MPARAM)0L);
+
+return TRUE;
+}
+
+ После чего  сервер  TRAY API посылает подтверждающий запрос
+ окну инициирующему DDE:
+
+ case WM_DDE_INITIATEACK:
+ /* aswer dde server */
+ AnswerTrayApiDdeAck(mp1);
+ trayApiInstalled = TRUE;
+ break;
+
+
+
+ 2. Создание иконки программы на трэе и управление ей
+
+ При успешной инициализации можно создать  иконку  на  трее.
+ При  этом  предполагается  что  параметр  HWND указывает на
+ клиентское окно,  предком которого является окно  -  рамка,
+ Т.к. инокна берется именно от окна - рамки.
+
+ AddTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT),NULLHANDLE);
+
+ Для изменения  иконки  (если  владелец  изменил иконку окна
+ рамки) требуется другой вызов:
+
+ ChangeTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT),NULLHANDLE);
+
+ Перед выходом приложение ОБЯЗАНО уничтожить свою иконку  на
+ трее, иначе она останется мертвым грузом!!!
+
+ DeleteTrayIcon(WinWindowFromID(hwndFrame,FID_CLIENT));
+
+
+
+ 3. Управление программой через TRAY API.
+
+ Кроме всего прочего,  имеется возможность посылки сообщений
+ от  мышки  (относящихся к иконке на трее),  для возможности
+ управления программой через трей.  Например, при нажатии на
+ правую   кнопку   мышки   над   иконкой  на  трее  выводить
+ всплывающее меню с возможными вариантами дейcтвий:
+
+ case WM_BUTTON2CLICK | 0x2000: // 0x2000 означает посылку сообщения от трея
+ WinQueryPointerPos (HWND_DESKTOP, &ptl);
+ WinPopupMenu (.....);
+
+ return NULL;
+
+
+
+ 4. Контакты
+
+ Автор программы: 	Дмитрий Захаров, madint@os2.ru
+ WWW страница проекта:	http://os2.ru/projects/systray
+ Team OS/2 Russian:     http://os2.ru
+ 
+
+
+____________________________________________________________
+Copyright (с) 1999-2000   Dmitry Zakharov, Team OS/2 Russian

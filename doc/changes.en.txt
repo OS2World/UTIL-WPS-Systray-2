@@ -1,0 +1,27 @@
+____________________________________________________________
+
+ Systray/2                  
+ History changes.         
+____________________________________________________________
+                                   Team OS/2 Russian project
+
+ 
+
+1.0 alpha 4 (15.08.2000)
+------------------------
++ English readme, www-page and development docs added.
+  Thanks to Vit Timchishin and Irina Koudina.
++ Icon size variables
++ Float on top mode
++ Disable dragging
++ Process filters in SystrayTaskbarClass
+  (now you can hide any process from tasklist)
++ Simple installation script and default configuration in systray2.ini.
+i In SystrayClock unit You can change font and background color with
+  drag-and-drop from OS/2 color/fonts palette.
+
+ 
+
+
+____________________________________________________________
+Systray/2 	Copyright (á) 1999-2000,   Team OS/2 Russian
